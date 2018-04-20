@@ -1,10 +1,14 @@
 FROM ubuntu:14.04
 
-RUN apt-get update && apt-get -y upgrade && \
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
+		apt-get update && apt-get -y upgrade && \
     apt-get install -y build-essential autoconf automake libtool pkg-config libssl-dev tcl-dev libexpat1-dev \
                        git-core libpcre3-dev libcap-dev libcap2 libboost-all-dev bison flex curl wget \
                        tmux gdb valgrind awscli man python-magic checkinstall libunwind8-dev \
-                       libjsoncpp-dev libb64-dev
+                       libjsoncpp-dev libb64-dev gcc-5 g++-5 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
 
 
 RUN cd /opt && wget https://cmake.org/files/v3.9/cmake-3.9.0.tar.gz && \
@@ -14,20 +18,20 @@ RUN cd /opt && wget https://cmake.org/files/v3.9/cmake-3.9.0.tar.gz && \
 RUN cd /opt && git clone https://code.googlesource.com/re2 && cd re2 && git checkout 2018-02-01 && \
     make install && ldconfig
 
-ENV GOLANG_VERSION 1.9.5
+ENV GOLANG_VERSION 1.10.1
 
 RUN set -eux; \
 	\
 # this "case" statement is generated via "update.sh"
 	dpkgArch="$(dpkg --print-architecture)"; \
 	case "${dpkgArch##*-}" in \
-		amd64) goRelArch='linux-amd64'; goRelSha256='d21bdabf4272c2248c41b45cec606844bdc5c7c04240899bde36c01a28c51ee7' ;; \
-		armhf) goRelArch='linux-armv6l'; goRelSha256='e9b6f0cbd95ff3077ddeaec1958be77d9675f0cf5652a67152d28d84707a4e9e' ;; \
-		arm64) goRelArch='linux-arm64'; goRelSha256='d0bb265559cd8613882e6bbd197a80ed7090684117c6fc6900aa58dea2463715' ;; \
-		i386) goRelArch='linux-386'; goRelSha256='52e0e3421ac4d9b8d8c89121ea93e5e3180a26679a8ea64ecbeb3657251634a3' ;; \
-		ppc64el) goRelArch='linux-ppc64le'; goRelSha256='dfd928ab818f72b801273c669d86e6c05626f2c2addc1c7178bb715fc608daf2' ;; \
-		s390x) goRelArch='linux-s390x'; goRelSha256='82c86885c8cc4d62ff81f828529c72cacd0ca8b02d442dc659858c6738363775' ;; \
-		*) goRelArch='src'; goRelSha256='f1c2bb7f32bbd8fa7a19cc1608e0d06582df32ff5f0340967d83fb0017c49fbc'; \
+		amd64) goRelArch='linux-amd64'; goRelSha256='72d820dec546752e5a8303b33b009079c15c2390ce76d67cf514991646c6127b' ;; \
+		armhf) goRelArch='linux-armv6l'; goRelSha256='feca4e920d5ca25001dc0823390df79bc7ea5b5b8c03483e5a2c54f164654936' ;; \
+		arm64) goRelArch='linux-arm64'; goRelSha256='1e07a159414b5090d31166d1a06ee501762076ef21140dcd54cdcbe4e68a9c9b' ;; \
+		i386) goRelArch='linux-386'; goRelSha256='acbe19d56123549faf747b4f61b730008b185a0e2145d220527d2383627dfe69' ;; \
+		ppc64el) goRelArch='linux-ppc64le'; goRelSha256='91d0026bbed601c4aad332473ed02f9a460b31437cbc6f2a37a88c0376fc3a65' ;; \
+		s390x) goRelArch='linux-s390x'; goRelSha256='e211a5abdacf843e16ac33a309d554403beb63959f96f9db70051f303035434b' ;; \
+		*) goRelArch='src'; goRelSha256='589449ff6c3ccbff1d391d4e7ab5bb5d5643a5a41a04c99315e55c16bbf73ddc'; \
 			echo >&2; echo >&2 "warning: current architecture ($dpkgArch) does not have a corresponding Go binary release; will be building from source"; echo >&2 ;; \
 	esac; \
 	\
