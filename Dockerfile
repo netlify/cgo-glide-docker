@@ -1,18 +1,33 @@
 FROM ubuntu:14.04
 
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
+RUN export DEBIAN_FRONTEND=noninteractive && \
+		apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
 		apt-get update && apt-get -y upgrade && \
-    apt-get install -y build-essential autoconf automake libtool pkg-config libssl-dev tcl-dev libexpat1-dev \
-                       git-core libpcre3-dev libcap-dev libcap2 libboost-all-dev bison flex curl wget \
-                       tmux gdb valgrind awscli man python-magic checkinstall libunwind8-dev \
-                       libjsoncpp-dev libb64-dev gcc-5 g++-5 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
+    apt-get install -y --no-install-recommends \
+# golang
+				build-essential \
+				pkg-config \
+# re2 checkout
+        git-core \
+				wget \
+# libredirect
+				valgrind \
+				gcc-5 \
+				g++-5 \
+# netlify-go-redirector
+				libssl-dev \
+    && \
+		update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5 && \
+		apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    apt-get autoremove -y && \
+    unset DEBIAN_FRONTEND
 
 
 RUN cd /opt && wget https://cmake.org/files/v3.9/cmake-3.9.0.tar.gz && \
-    tar xf cmake-3.9.0.tar.gz && cd cmake-3.9.0 && ./configure && make && make install
+    tar xf cmake-3.9.0.tar.gz && cd cmake-3.9.0 && ./bootstrap && make && make install
 
 
 RUN cd /opt && git clone https://code.googlesource.com/re2 && cd re2 && git checkout 2018-02-01 && \
@@ -64,7 +79,7 @@ ENV GLIDE_DOWNLOAD_SHA256 c403933503ea40308ecfadcff581ff0dc3190c57958808bb9eed01
 
 ENV PATH $PATH:/usr/local/glide/linux-amd64
 
-RUN curl -fsSL "$GLIDE_DOWNLOAD_URL" -o glide.tar.gz \
+RUN wget -q "$GLIDE_DOWNLOAD_URL" -O glide.tar.gz \
 	&& echo "$GLIDE_DOWNLOAD_SHA256  glide.tar.gz" | sha256sum -c - \
 	&& mkdir -p /usr/local/glide \
 	&& tar -C /usr/local/glide -xzf glide.tar.gz \
